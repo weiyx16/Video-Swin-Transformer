@@ -110,7 +110,7 @@ class LanguageHead(BaseHead):
         else:
             self.dropout = None
         self.language_model = LModel()
-        self.visual_proj = nn.Linear(768, 256, bias=False)
+        self.visual_proj = nn.Linear(in_channels, 256, bias=False)
 
         if self.spatial_type == 'avg':
             # use `nn.AdaptiveAvgPool3d` to adaptively match the in_channels.

@@ -574,6 +574,21 @@ class SwinTransformer3D(nn.Module):
         """
         checkpoint = torch.load(self.pretrained, map_location='cpu')
         state_dict = checkpoint['model']
+        is_from_vl = False
+        for k, v in state_dict.items():
+            if 'visual_model.backbone.' in k:
+                is_from_vl = True
+                break
+        if is_from_vl:
+            print('!!!!! You are successfully load from vl model;')
+            new_state_dict = {}
+            for k, v in state_dict.items():
+                if k.startswith('visual_model.backbone.'):
+                    k = k.replace('rel_pos_embed_table', 'relative_position_bias_table')
+                    k = k.replace('relative_coords', 'relative_position_index')
+                    k = k.replace('.channel_reduction.', '.reduction.')
+                    new_state_dict[k.replace('visual_model.backbone.', '')] = v.cpu()
+            state_dict = new_state_dict
 
         # delete relative_position_index since we always re-init it
         relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]

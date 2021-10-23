@@ -144,9 +144,9 @@ class LanguageHead(BaseHead):
     def init_weights(self):
         """Initiate the parameters from scratch."""
         ### LOAD Pretrain Weight
+        logger = get_root_logger()
         if self.pretrained is not None:
             assert isinstance(self.pretrained, str), 'give path to pretrained vl model'
-            logger = get_root_logger()
             logger.info(f'load language head from: {self.pretrained}')
             checkpoint = torch.load(self.pretrained, map_location='cpu')
             state_dict = checkpoint['model']
@@ -167,7 +167,7 @@ class LanguageHead(BaseHead):
             del checkpoint
             torch.cuda.empty_cache()
         else:
-            assert False, " You have to use pretrained language model for now!! "
+            logger.warning(" You have to use pretrained language model for now!! If it's for test, skip it")
 
     def forward_clshead(self, device, ensembled=False):
         ## inference class weight:

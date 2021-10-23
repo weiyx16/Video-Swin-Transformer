@@ -580,7 +580,7 @@ class SwinTransformer3D(nn.Module):
                 is_from_vl = True
                 break
         if is_from_vl:
-            print('!!!!! You are successfully load from vl model;')
+            logger.info('!!!!! You are successfully load from vl model;')
             new_state_dict = {}
             for k, v in state_dict.items():
                 if k.startswith('visual_model.backbone.'):

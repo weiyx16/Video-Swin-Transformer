@@ -2,6 +2,7 @@ import torch
 from torch import nn
 
 from ..builder import RECOGNIZERS
+from ..heads import LanguageHead
 from .base import BaseRecognizer
 
 
@@ -80,7 +81,10 @@ class Recognizer3D(BaseRecognizer):
 
         # should have cls_head if not extracting features
         assert self.with_cls_head
-        cls_score = self.cls_head(feat)
+        if isinstance(self.cls_head, LanguageHead):
+            cls_score = self.cls_head(feat, is_test=True)
+        else:
+            cls_score = self.cls_head(feat)
         cls_score = self.average_clip(cls_score, num_segs)
         return cls_score
 

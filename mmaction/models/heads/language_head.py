@@ -137,6 +137,7 @@ class LanguageHead(BaseHead):
         total_gpu = int(dist.get_world_size())
         assert len(self.classnames) % total_gpu == 0, " to distributed class name, should seperatable"
         per_gpu_len = len(self.classnames) // total_gpu
+        self.full_classnames = self.classnames
         self.classnames = self.classnames[global_rank * per_gpu_len : min((global_rank+1) * per_gpu_len, len(self.classnames))]
 
         self.class_head_weight_gathered_promptensembled = None
@@ -184,8 +185,9 @@ class LanguageHead(BaseHead):
             # class_head_weight_gathered = varsize_dist_collect(class_head_weight)
             return class_head_weight_gathered
         else:
+            print("Begin Ensemble Forward")
             zeroshot_weights = []
-            for idx, classname in enumerate(self.classnames):
+            for idx, classname in enumerate(self.full_classnames):
                 texts = []
                 for template in self.templates:
                     _texts = template.format(classname)
@@ -199,8 +201,7 @@ class LanguageHead(BaseHead):
                     class_embedding /= class_embedding.norm()
                 zeroshot_weights.append(class_embedding)
             zeroshot_weights = torch.stack(zeroshot_weights, dim=1).to(device)
-            class_head_weight_gathered = SyncFunction.apply(zeroshot_weights) 
-        return class_head_weight_gathered
+            return zeroshot_weights
 
 
     def forward(self, x, is_test=False):

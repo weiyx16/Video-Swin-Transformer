@@ -430,7 +430,7 @@ class LanguageHead(BaseHead):
         self.full_classnames = self.classnames
         per_gpu_len = len(self.classnames) // total_gpu
         last_more = len(self.classnames) - per_gpu_len * total_gpu
-        if (total_gpu - global_rank) < last_more:
+        if (total_gpu - global_rank) <= last_more:
             id_more = global_rank - (total_gpu - last_more)
             # self.classnames = self.classnames[global_rank * per_gpu_len + id_more * 1 : min((global_rank+1) * per_gpu_len + (id_more+1) * 1, len(self.classnames))]
             import pprint
@@ -439,7 +439,7 @@ class LanguageHead(BaseHead):
         else:
             self.classnames = self.classnames[global_rank * per_gpu_len : min((global_rank+1) * per_gpu_len, len(self.classnames))]
             import pprint
-            ids = range(global_rank * per_gpu_len, min((global_rank+1) * per_gpu_len, len(self.classnames)))
+            ids = range(global_rank * per_gpu_len, min((global_rank+1) * per_gpu_len, len(self.full_classnames)))
             pprint.pprint(ids)
         self.class_head_weight_gathered_promptensembled = None
 

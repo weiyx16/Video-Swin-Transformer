@@ -1,7 +1,7 @@
 _base_ = [
     '../../_base_/models/swin/swin_base.py', '../../_base_/default_runtime.py'
 ]
-model=dict(backbone=dict(patch_size=(2,4,4), window_size=(8,12,12), drop_path_rate=0.3), cls_head=dict(type='LanguageHead'), test_cfg=dict(max_testing_views=2))
+model=dict(backbone=dict(patch_size=(2,4,4), window_size=(8,12,12), use_checkpoint=True, drop_path_rate=0.3), cls_head=dict(type='LanguageHead'), test_cfg=dict(max_testing_views=2), train_cfg=dict(blending=dict(type='LabelSmoothing', num_classes=400, smoothing=0.1)))
 
 # dataset settings
 dataset_type = 'VideoDataset'
@@ -60,7 +60,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=8,
+    videos_per_gpu=1,
     workers_per_gpu=4,
     val_dataloader=dict(
         videos_per_gpu=1,
@@ -114,7 +114,7 @@ find_unused_parameters = False
 fp16 = None
 optimizer_config = dict(
     type="DistOptimizerHook",
-    update_interval=4,
+    update_interval=1,
     grad_clip=None,
     coalesce=True,
     bucket_size_mb=-1,

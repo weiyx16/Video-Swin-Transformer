@@ -170,40 +170,40 @@ class LanguageHead(BaseHead):
         self.logit_scale = nn.Parameter(torch.log(torch.tensor(1. / 0.05)), requires_grad=False)
         self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
         # ref to: https://github.com/sallymmx/ActionCLIP/blob/master/utils/Text_Prompt.py
-        self.templates = [f"a photo of action {{}}", f"a picture of action {{}}", f"Human action of {{}}", f"{{}}, an action",
-                f"{{}} this is an action", f"{{}}, a video of action", f"Playing action of {{}}", f"{{}}",
-                f"Playing a kind of action, {{}}", f"Doing a kind of action, {{}}", f"Look, the human is {{}}",
-                f"Can you recognize the action of {{}}?", f"Video classification of {{}}", f"A video of {{}}",
-                f"The man is {{}}", f"The woman is {{}}"]
-        # self.templates = ['a photo of {}.',
-        #     'a photo of a person {}.',
-        #     'a photo of a person using {}.',
-        #     'a photo of a person doing {}.',
-        #     'a photo of a person during {}.',
-        #     'a photo of a person performing {}.',
-        #     'a photo of a person practicing {}.',
-        #     'a video of {}.',
-        #     'a video of a person {}.',
-        #     'a video of a person using {}.',
-        #     'a video of a person doing {}.',
-        #     'a video of a person during {}.',
-        #     'a video of a person performing {}.',
-        #     'a video of a person practicing {}.',
-        #     'a example of {}.',
-        #     'a example of a person {}.',
-        #     'a example of a person using {}.',
-        #     'a example of a person doing {}.',
-        #     'a example of a person during {}.',
-        #     'a example of a person performing {}.',
-        #     'a example of a person practicing {}.',
-        #     'a demonstration of {}.',
-        #     'a demonstration of a person {}.',
-        #     'a demonstration of a person using {}.',
-        #     'a demonstration of a person doing {}.',
-        #     'a demonstration of a person during {}.',
-        #     'a demonstration of a person performing {}.',
-        #     'a demonstration of a person practicing {}.',
-        # ]
+        # self.templates = [f"a photo of action {{}}", f"a picture of action {{}}", f"Human action of {{}}", f"{{}}, an action",
+        #         f"{{}} this is an action", f"{{}}, a video of action", f"Playing action of {{}}", f"{{}}",
+        #         f"Playing a kind of action, {{}}", f"Doing a kind of action, {{}}", f"Look, the human is {{}}",
+        #         f"Can you recognize the action of {{}}?", f"Video classification of {{}}", f"A video of {{}}",
+        #         f"The man is {{}}", f"The woman is {{}}"]
+        self.templates = ['a photo of {}.',
+            'a photo of a person {}.',
+            'a photo of a person using {}.',
+            'a photo of a person doing {}.',
+            'a photo of a person during {}.',
+            'a photo of a person performing {}.',
+            'a photo of a person practicing {}.',
+            'a video of {}.',
+            'a video of a person {}.',
+            'a video of a person using {}.',
+            'a video of a person doing {}.',
+            'a video of a person during {}.',
+            'a video of a person performing {}.',
+            'a video of a person practicing {}.',
+            'a example of {}.',
+            'a example of a person {}.',
+            'a example of a person using {}.',
+            'a example of a person doing {}.',
+            'a example of a person during {}.',
+            'a example of a person performing {}.',
+            'a example of a person practicing {}.',
+            'a demonstration of {}.',
+            'a demonstration of a person {}.',
+            'a demonstration of a person using {}.',
+            'a demonstration of a person doing {}.',
+            'a demonstration of a person during {}.',
+            'a demonstration of a person performing {}.',
+            'a demonstration of a person practicing {}.',
+        ]
         # self.templates = [  'a bad photo of a {}.',  'a photo of many {}.',  'a sculpture of a {}.',  'a photo of the hard to see {}.',  'a low resolution photo of the {}.',  'a rendering of a {}.',  'graffiti of a {}.',  'a bad photo of the {}.',  'a cropped photo of the {}.',  'a tattoo of a {}.',  'the embroidered {}.',  'a photo of a hard to see {}.',  'a bright photo of a {}.',  'a photo of a clean {}.',  'a photo of a dirty {}.',  'a dark photo of the {}.',  'a drawing of a {}.',  'a photo of my {}.',  'the plastic {}.',  'a photo of the cool {}.',  'a close-up photo of a {}.',  'a black and white photo of the {}.',  'a painting of the {}.',  'a painting of a {}.',  'a pixelated photo of the {}.',  'a sculpture of the {}.',  'a bright photo of the {}.',  'a cropped photo of a {}.',  'a plastic {}.',  'a photo of the dirty {}.',  'a jpeg corrupted photo of a {}.',  'a blurry photo of the {}.',  'a photo of the {}.',  'a good photo of the {}.',  'a rendering of the {}.',  'a {} in a video game.',  'a photo of one {}.',  'a doodle of a {}.',  'a close-up photo of the {}.',  'a photo of a {}.',  'the origami {}.',  'the {} in a video game.',  'a sketch of a {}.',  'a doodle of the {}.',  'a origami {}.',  'a low resolution photo of a {}.',  'the toy {}.',  'a rendition of the {}.',  'a photo of the clean {}.',  'a photo of a large {}.',  'a rendition of a {}.',  'a photo of a nice {}.',  'a photo of a weird {}.',  'a blurry photo of a {}.',  'a cartoon {}.',  'art of a {}.',  'a sketch of the {}.',  'a embroidered {}.',  'a pixelated photo of a {}.',  'itap of the {}.',  'a jpeg corrupted photo of the {}.',  'a good photo of a {}.',  'a plushie {}.',  'a photo of the nice {}.',  'a photo of the small {}.',  'a photo of the weird {}.',  'the cartoon {}.',  'art of the {}.',  'a drawing of the {}.',  'a photo of the large {}.',  'a black and white photo of a {}.',  'the plushie {}.',  'a dark photo of a {}.',  'itap of a {}.',  'graffiti of the {}.',  'a toy {}.',  'itap of my {}.',  'a photo of a cool {}.',  'a photo of a small {}.',  'a tattoo of the {}.']
         # https://gist.github.com/willprice/f19da185c9c5f32847134b87c1960769
         if dataset == 'k400':
@@ -423,11 +423,11 @@ class LanguageHead(BaseHead):
                 'wave']
         global_rank = int(dist.get_rank())
         total_gpu = int(dist.get_world_size())
-        if dataset != 'sthv2' and dataset != 'ucf101':
-            assert len(self.classnames) % total_gpu == 0, " to distributed class name, should seperatable"
-            per_gpu_len = len(self.classnames) // total_gpu
-        else:
-            per_gpu_len = len(self.classnames) // total_gpu + 1
+        # if dataset != 'sthv2' and dataset != 'ucf101':
+        #     assert len(self.classnames) % total_gpu == 0, " to distributed class name, should seperatable"
+        #     per_gpu_len = len(self.classnames) // total_gpu
+        # else:
+        per_gpu_len = len(self.classnames) // total_gpu + 1
         self.full_classnames = self.classnames
         self.classnames = self.classnames[global_rank * per_gpu_len : min((global_rank+1) * per_gpu_len, len(self.classnames))]
 
@@ -472,8 +472,8 @@ class LanguageHead(BaseHead):
             prompted_imagenet_classhead_input = {k:v.to(device, non_blocking=True) for k, v in prompted_imagenet_classhead_input.items()}
             # with torch.no_grad():
             class_head_weight = self.language_model(prompted_imagenet_classhead_input)
-            class_head_weight_gathered = SyncFunction.apply(class_head_weight) 
-            # class_head_weight_gathered = varsize_dist_collect(class_head_weight)
+            # class_head_weight_gathered = SyncFunction.apply(class_head_weight) 
+            class_head_weight_gathered = varsize_dist_collect(class_head_weight)
             return class_head_weight_gathered
         else:
             print("Begin Ensemble Forward")

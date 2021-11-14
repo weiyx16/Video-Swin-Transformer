@@ -432,7 +432,7 @@ class LanguageHead(BaseHead):
         last_more = len(self.classnames) - per_gpu_len * total_gpu
         if (total_gpu - global_rank) <= last_more:
             id_more = global_rank - (total_gpu - last_more)
-            # self.classnames = self.classnames[global_rank * per_gpu_len + id_more * 1 : min((global_rank+1) * per_gpu_len + (id_more+1) * 1, len(self.classnames))]
+            self.classnames = self.classnames[global_rank * per_gpu_len + id_more * 1 : min((global_rank+1) * per_gpu_len + (id_more+1) * 1, len(self.classnames))]
             import pprint
             ids = range(global_rank * per_gpu_len + id_more * 1, min((global_rank+1) * per_gpu_len + (id_more+1) * 1, len(self.full_classnames)))
             pprint.pprint(ids)

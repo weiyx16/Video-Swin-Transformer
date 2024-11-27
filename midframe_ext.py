@@ -10,21 +10,23 @@ from PIL import Image
 import time
 import os
 
-folders = os.listdir('/home/develop/AML-bing_clip/data/kinetics600/val')
+folders = os.listdir('./data/hmdb51/videos')
+if not os.path.exists('./data/hmdb51/midframes'):
+    os.mkdir('./data/hmdb51/midframes')
 file_client = FileClient('disk')
 for f in folders:
     tic = time.time()
-    if not os.path.exists(os.path.join('/home/develop/AML-bing_clip/data/kinetics600/midframes', f)):
-        os.mkdir(os.path.join('/home/develop/AML-bing_clip/data/kinetics600/midframes', f))
-    filenames = os.listdir(os.path.join('/home/develop/AML-bing_clip/data/kinetics600/val', f))
+    if not os.path.exists(os.path.join('./data/hmdb51/midframes', f)):
+        os.mkdir(os.path.join('./data/hmdb51/midframes', f))
+    filenames = os.listdir(os.path.join('./data/hmdb51/videos', f))
     for filename in filenames:
         video_name = filename.split('.')[0]
-        img_name = os.path.join('/home/develop/AML-bing_clip/data/kinetics600/midframes', f, video_name+'.jpg')
+        img_name = os.path.join('./data/hmdb51/midframes', f, video_name+'.jpg')
         if os.path.exists(img_name):
             continue
         try:
-            file_obj = io.BytesIO(file_client.get(os.path.join('/home/develop/AML-bing_clip/data/kinetics600/val', f, filename)))
-            container = decord.VideoReader(file_obj, num_threads=10)
+            file_obj = io.BytesIO(file_client.get(os.path.join('./data/hmdb51/videos', f, filename)))
+            container = decord.VideoReader(file_obj, num_threads=40)
         except Exception as e:
             print(f"Failed: {filename} ", e)
             continue

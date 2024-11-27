@@ -9,7 +9,7 @@ from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.fileio.io import file_handlers
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import get_dist_info, init_dist, load_checkpoint
+from mmcv.runner import get_dist_info, init_dist, _load_checkpoint, load_state_dict
 from mmcv.runner.fp16_utils import wrap_fp16_model
 
 from mmaction.datasets import build_dataloader, build_dataset
@@ -26,6 +26,66 @@ except (ImportError, ModuleNotFoundError):
         'deprecated. Please install mmcv through master branch.')
     from mmaction.apis import multi_gpu_test, single_gpu_test
 
+def load_checkpoint_windowinterpolate(model,
+                    filename,
+                    map_location=None,
+                    strict=False,
+                    logger=None):
+    """Load checkpoint from a file or URI.
+
+    Args:
+        model (Module): Module to load checkpoint.
+        filename (str): Accept local filepath, URL, ``torchvision://xxx``,
+            ``open-mmlab://xxx``. Please refer to ``docs/model_zoo.md`` for
+            details.
+        map_location (str): Same as :func:`torch.load`.
+        strict (bool): Whether to allow different params for the model and
+            checkpoint.
+        logger (:mod:`logging.Logger` or None): The logger for error message.
+
+    Returns:
+        dict or OrderedDict: The loaded checkpoint.
+    """
+    checkpoint = _load_checkpoint(filename, map_location, logger)
+    # OrderedDict is a subclass of dict
+    if not isinstance(checkpoint, dict):
+        raise RuntimeError(
+            f'No state_dict found in checkpoint file {filename}')
+    # get state_dict from checkpoint
+    if 'state_dict' in checkpoint:
+        state_dict = checkpoint['state_dict']
+    else:
+        state_dict = checkpoint
+    # strip prefix of state_dict
+    if list(state_dict.keys())[0].startswith('module.'):
+        state_dict = {k[7:]: v for k, v in state_dict.items()}
+
+    # bicubic interpolate relative_position_bias_table if not match
+    relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]
+    for k in relative_position_bias_table_keys:
+        relative_position_bias_table_pretrained = state_dict[k]
+        relative_position_bias_table_current = model.state_dict()[k]
+        L1, nH1 = relative_position_bias_table_pretrained.size()
+        L2, nH2 = relative_position_bias_table_current.size()
+        spatial_window = (2*model.backbone.window_size[1]-1) * (2*model.backbone.window_size[2]-1)
+        wd = 2*model.backbone.window_size[0]-1
+        wd_old = L1 // spatial_window
+        if nH1 != nH2:
+            logger.warning(f"Error in loading {k}, passing")
+        else:
+            if wd != wd_old:
+                print(f" interpolating the temporal windowsize from {wd_old} to {wd}")
+                S1 = int(spatial_window ** 0.5)
+                relative_position_bias_table_pretrained = relative_position_bias_table_pretrained.permute(1, 0).reshape(nH1, wd_old, S1*S1).permute(0,2,1)
+                relative_position_bias_table_pretrained_resized = torch.nn.functional.interpolate(
+                    relative_position_bias_table_pretrained, size=(wd),
+                    mode='linear')
+                relative_position_bias_table_pretrained = relative_position_bias_table_pretrained_resized.permute(0,2,1).reshape(nH2, L2).permute(1, 0)
+        state_dict[k] = relative_position_bias_table_pretrained
+
+    # load state_dict
+    load_state_dict(model, state_dict, strict, logger)
+    return checkpoint
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -151,7 +211,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     if fp16_cfg is not None:
         wrap_fp16_model(model)
     if args.checkpoint != 'PLACEHOLD':
-        load_checkpoint(model, args.checkpoint, map_location='cpu')
+        load_checkpoint_windowinterpolate(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
